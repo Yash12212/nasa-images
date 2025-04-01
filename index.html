@@ -3,562 +3,826 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NASA Image Gallery</title>
-    <link href="https://fonts.googleapis.com/css2?family=Georgia:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https://*.nasa.gov https://img.youtube.com data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; script-src 'self' 'unsafe-inline'; connect-src 'self' https://api.nasa.gov; frame-src https://www.youtube.com https://player.vimeo.com;">
+    <title>NASA Image & Video Gallery</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Georgia:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         :root {
-            --primary-color: #2c3e50;
-            --secondary-color: #34495e;
-            --text-color: #333;
-            --bg-color: #f4f4f4;
+            --primary-color: #0B3D91;
+            --secondary-color: #FC3D21;
+            --text-color: #212529;
+            --muted-text-color: #6c757d;
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --border-color: #dee2e6;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --heart-color: #e74c3c;
+            --success-color: #198754;
+            --error-color: #dc3545;
+            --link-color: #0d6efd;
+            --font-primary: 'Roboto', sans-serif;
+            --font-secondary: 'Georgia', serif;
         }
 
+        *, *::before, *::after { box-sizing: border-box; }
         body {
-            font-family: 'Georgia', serif;
-            margin: 0;
-            padding: 0;
+            font-family: var(--font-primary);
+            margin: 0; padding: 0;
             background-color: var(--bg-color);
             color: var(--text-color);
+            line-height: 1.6;
+            font-size: 16px;
         }
+        img, video { max-width: 100%; height: auto; display: block; }
+        button { cursor: pointer; font-family: inherit; }
+        h1, h2, h3 { font-family: var(--font-secondary); font-weight: 700; }
+        a { color: var(--link-color); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        .visually-hidden {
+            position: absolute; width: 1px; height: 1px;
+            padding: 0; margin: -1px; overflow: hidden;
+            clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+        }
+        .icon { margin-right: 8px; }
+        .spinner { animation: spin 1s linear infinite; display: inline-block; }
 
         header {
-            background: var(--primary-color);
-            color: white;
-            padding: 20px 0;
-            text-align: center;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-            position: relative;
-            overflow: hidden;
+            background: var(--primary-color); color: white;
+            padding: 25px 20px; text-align: center;
+            box-shadow: 0 2px 8px var(--shadow-color);
         }
+        header h1 { font-size: 2.5rem; margin: 0; }
 
-        header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
-            opacity: 0.8;
-            z-index: 0;
-        }
+        main { padding: 25px 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
 
-        header h1 {
-            font-size: 2.5rem;
-            margin: 0;
-            position: relative;
-            z-index: 1;
-        }
-
-        .controls {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin: 20px 0;
-            padding: 0 20px;
-        }
-
-        .control-btn {
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-
-        .control-btn:hover {
-            background: var(--secondary-color);
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 20px auto;
+        .controls-section {
+            background-color: var(--card-bg);
             padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px var(--shadow-color);
+            margin-bottom: 30px;
         }
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            align-items: start;
+        }
+        .control-group { display: flex; flex-direction: column; gap: 5px; }
+        .control-group label { font-weight: bold; font-size: 0.9rem; color: var(--muted-text-color); }
+        .control-btn {
+            background: var(--primary-color); color: white; border: none;
+            padding: 10px 15px; border-radius: 5px;
+            transition: background-color 0.3s ease, transform 0.2s ease, opacity 0.3s;
+            font-size: 0.95rem; display: inline-flex;
+            align-items: center; justify-content: center; gap: 8px;
+            text-align: center; width: 100%;
+        }
+        .control-btn:hover:not(:disabled) {
+            background: #083075;
+            transform: translateY(-2px);
+        }
+        .control-btn:disabled { background-color: var(--muted-text-color); cursor: not-allowed; opacity: 0.7; }
+        .control-btn .spinner { font-size: 1em; margin: 0; }
 
+        .results-area { min-height: 300px; }
         .image-container {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-            width: 100%;
+            gap: 25px;
         }
 
-        .image-card {
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-            cursor: pointer;
-            position: relative;
-        }
-
-        .image-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .favorite-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(255, 255, 255, 0.8);
-            border: none;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            cursor: pointer;
-            z-index: 2;
-        }
-
-        .favorite-btn i {
-            color: #ff4757;
-        }
-
-        .image-card img {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-            transition: transform 0.3s ease;
-        }
-
-        .image-card:hover img {
-            transform: scale(1.05);
-        }
-
-        .card-content {
-            padding: 15px;
-        }
-
-        .card-content h3 {
-            margin: 0 0 10px;
-            font-size: 1.5rem;
-            color: var(--primary-color);
-        }
-
-        .card-date {
-            font-size: 0.9rem;
-            color: #666;
-            margin-bottom: 10px;
-        }
-
-        .card-description {
-            font-size: 1rem;
-            color: #444;
-            line-height: 1.5;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 1000;
-            overflow-y: auto;
-        }
-
-        .modal-content {
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            max-width: 800px;
-            width: 90%;
-            margin: 40px auto;
-            position: relative;
-        }
-
-        .close-modal {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            cursor: pointer;
-            font-size: 1.5rem;
-            color: var(--primary-color);
-            transition: transform 0.3s ease;
-        }
-
-        .close-modal:hover {
-            transform: rotate(90deg);
-        }
-
-        .loading {
-            display: flex;
-            flex-direction: column;
-            justify-content: center; /* Center vertically */
-            align-items: center; /* Center horizontally */
-            height: 100vh; /* Full viewport height */
-            text-align: center;
-            position: absolute; /* Position absolute to overlay */
-            top: 0; /* Align to the top */
-            left: 0; /* Align to the left */
-            right: 0; /* Align to the right */
-            bottom: 0; /* Align to the bottom */
-            margin: auto; /* Center the loading container */
-        }
-
-        .loading-spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid var(--primary-color);
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .share-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .share-btn {
-            padding: 5px 10px;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            transition: background 0.3s ease;
-        }
-
-        .share-btn.twitter {
-            background: #1DA1F2;
-            color: white;
-        }
-
-        .share-btn.facebook {
-            background: #4267B2;
-            color: white;
-        }
-
-        @media (max-width: 768px) {
-            .image-container {
-                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            }
-
-            .modal-content {
-                width: 95%;
-                padding: 15px;
-            }
-        }
-
-        .image-card {
-            opacity: 0;
-            transform: translateY(20px);
+        .item-card {
+            background: var(--card-bg); border-radius: 8px;
+            overflow: hidden; box-shadow: 0 2px 5px var(--shadow-color);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex; flex-direction: column;
+            opacity: 0; transform: translateY(20px);
             animation: fadeInUp 0.5s ease forwards;
         }
-
-        @keyframes fadeInUp {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .item-card:hover, .item-card:focus-within {
+            transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
         }
 
-        .pulse {
-            animation: pulse 0.5s ease-in-out;
-        }
+        .card-media-link { display: block; overflow: hidden; background-color: #eee; position: relative; }
+        .card-media-link::after {
+             content: '\f144';
+             font-family: 'Font Awesome 6 Free';
+             font-weight: 900;
+             position: absolute;
+             top: 50%; left: 50%;
+             transform: translate(-50%, -50%);
+             font-size: 3rem;
+             color: rgba(255, 255, 255, 0.8);
+             opacity: 0;
+             transition: opacity 0.3s ease;
+             pointer-events: none;
+         }
+         .item-card[data-media-type="video"] .card-media-link::after {
+              opacity: 1;
+         }
 
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
+        .card-image, .card-video-thumb {
+            width: 100%; height: 220px; object-fit: cover;
+            transition: transform 0.4s ease; border-bottom: 1px solid var(--border-color);
         }
+        .item-card:hover .card-image, .card-media-link:focus .card-image { transform: scale(1.05); }
 
-        .shake {
-            animation: shake 0.5s ease-in-out;
+        .card-content { padding: 20px; flex-grow: 1; display: flex; flex-direction: column; }
+        .card-content h3 { margin: 0 0 10px; font-size: 1.4rem; color: var(--primary-color); line-height: 1.3; }
+        .card-date { font-size: 0.85rem; color: var(--muted-text-color); margin-bottom: 10px; }
+        .card-description { font-size: 0.95rem; margin-bottom: 15px; flex-grow: 1; }
+        .card-actions { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
+        .view-details-btn {
+            background-color: var(--secondary-color); color: white; border: none;
+            padding: 8px 15px; border-radius: 4px; font-size: 0.9rem;
+            transition: background-color 0.3s ease;
         }
+        .view-details-btn:hover { background-color: #d1270f; }
+        .favorite-btn {
+            background: none; border: none; color: var(--heart-color);
+            font-size: 1.8rem; padding: 5px; line-height: 1;
+            transition: transform 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+        }
+        .favorite-btn:hover { transform: scale(1.15); }
+        .favorite-btn .fa-solid { display: none; }
+        .favorite-btn .fa-regular { display: inline-block; }
+        .favorite-btn.is-favorite .fa-solid { display: inline-block; }
+        .favorite-btn.is-favorite .fa-regular { display: none; }
 
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 
-            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        .modal {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0, 0, 0, 0.85); z-index: 1000;
+            overflow-y: auto; padding: 20px;
+            opacity: 0; transition: opacity 0.3s ease-in-out;
         }
+        .modal.is-open { display: flex; align-items: center; justify-content: center; opacity: 1; }
+        .modal-content {
+            background: white; padding: 25px; border-radius: 8px;
+            max-width: 900px; width: 95%;
+            margin: 20px auto; position: relative;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            transform: scale(0.95); transition: transform 0.3s ease-in-out;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        .modal.is-open .modal-content { transform: scale(1); }
+
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
+        #modalTitle { font-size: 1.6rem; margin: 0; color: var(--primary-color); padding-right: 15px; }
+        .modal-header-actions { display: flex; gap: 10px; flex-shrink: 0; }
+        .modal-action-btn, .close-modal {
+             background: none; border: none; font-size: 1.5rem; color: var(--muted-text-color);
+             transition: transform 0.3s ease, color 0.3s ease; line-height: 1; padding: 5px;
+        }
+        .modal-action-btn:hover, .close-modal:hover { color: var(--primary-color); transform: scale(1.1); }
+        .close-modal:hover { transform: rotate(90deg); color: var(--secondary-color); }
+
+        .modal-body { margin-bottom: 20px; flex-grow: 1; }
+         #modalMediaContainer {
+             margin-bottom: 15px;
+             background-color: #111;
+             border-radius: 4px;
+             position: relative;
+             overflow: hidden;
+         }
+         #modalImage { display: block; width: 100%; height: auto; max-height: 60vh; object-fit: contain; }
+         #modalVideoEmbed { width: 100%; height: 0; padding-bottom: 56.25%; position: relative; }
+         #modalVideoEmbed iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+         #modalHdLink { display: block; margin-top: 10px; font-size: 0.9rem; text-align: center; }
+
+        .modal-footer { border-top: 1px solid var(--border-color); padding-top: 15px; }
+        .share-buttons { display: flex; flex-wrap: wrap; gap: 10px; justify-content: start; }
+        .share-btn {
+            padding: 8px 15px; border: none; border-radius: 4px;
+            display: inline-flex; align-items: center; gap: 8px;
+            color: white; font-size: 0.9rem; transition: opacity 0.3s ease;
+        }
+        .share-btn:hover { opacity: 0.85; }
+        .share-btn.twitter { background: #1DA1F2; }
+        .share-btn.facebook { background: #1877F2; }
+
+        .loading-state, .error-state, .no-results-state {
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            padding: 50px 20px; text-align: center; width: 100%;
+            grid-column: 1 / -1; min-height: 300px; color: var(--muted-text-color);
+        }
+        .loading-spinner {
+            border: 5px solid #f3f3f3; border-top: 5px solid var(--primary-color);
+            border-radius: 50%; width: 50px; height: 50px;
+            animation: spin 1s linear infinite; margin-bottom: 20px;
+        }
+        .error-state { color: var(--error-color); }
+        .error-state i, .no-results-state i { font-size: 3rem; margin-bottom: 15px; }
+        .error-state button { margin-top: 15px; }
+        .no-results-state { color: var(--primary-color); }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
+        .pulse { animation: pulse 0.5s ease-in-out; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
 
         #scrollTopBtn {
-            display: none;
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 99;
-            border: none;
-            outline: none;
-            background-color: var(--primary-color);
-            color: white;
-            cursor: pointer;
-            padding: 15px;
-            border-radius: 50%;
-            font-size: 18px;
-            transition: background-color 0.3s;
+            position: fixed; bottom: 30px; right: 30px; z-index: 99;
+            border: none; outline: none; background-color: var(--primary-color); color: white;
+            cursor: pointer; padding: 0; border-radius: 50%; width: 50px; height: 50px;
+            font-size: 20px; transition: background-color 0.3s ease, transform 0.3s ease, opacity 0.3s ease, visibility 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2); display: flex; justify-content: center; align-items: center;
+            opacity: 0; visibility: hidden;
+        }
+        #scrollTopBtn:hover { background-color: var(--secondary-color); transform: translateY(-3px); }
+        #scrollTopBtn.visible { opacity: 1; visibility: visible; }
+
+        *:focus-visible {
+            outline: 3px solid var(--secondary-color);
+            outline-offset: 2px;
+            border-radius: 4px;
+        }
+        .modal *:focus:not(:focus-visible) { outline: none; }
+
+
+        @media (max-width: 768px) {
+            header h1 { font-size: 2rem; }
+            .image-container { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
+            .modal-content { width: 95%; padding: 20px; max-height: calc(100vh - 40px); }
+            #modalTitle { font-size: 1.4rem; }
+            .card-content h3 { font-size: 1.2rem; }
+            .card-description { font-size: 0.9rem; }
+        }
+        @media (max-width: 480px) {
+             .image-container { grid-template-columns: 1fr; }
+             .controls-grid { grid-template-columns: 1fr; }
+             .control-btn { font-size: 0.9rem; }
+             #scrollTopBtn { bottom: 20px; right: 20px; width: 45px; height: 45px; font-size: 18px; }
+             .modal-header { flex-wrap: wrap; }
+             #modalTitle { margin-bottom: 10px; width: 100%; }
+             .modal-header-actions { align-self: flex-end; margin-left: auto; }
         }
 
-        #scrollTopBtn:hover {
-            background-color: var(--secondary-color);
-        }
     </style>
 </head>
 <body>
     <header>
-        <h1>NASA Image Gallery</h1>
+        <h1>NASA Image & Video Gallery</h1>
     </header>
 
-    <div class="controls">
-        <button class="control-btn" id="showFavorites">
-            <i class="fas fa-heart"></i> Show Favorites
-        </button>
-        <button class="control-btn" id="showAll">
-            <i class="fas fa-globe"></i> Show All
-        </button>
-    </div>
+    <main>
+        <section class="controls-section" aria-labelledby="controls-heading">
+            <h2 id="controls-heading" class="visually-hidden">Gallery Controls</h2>
+            <div class="controls-grid">
+                <div class="control-group">
+                    <label for="showAll" class="visually-hidden">Show Latest Random Images</label>
+                    <button class="control-btn" id="showAll">
+                        <i class="fas fa-images icon"></i> Show Latest
+                    </button>
+                </div>
+                <div class="control-group">
+                    <label for="showFavorites" class="visually-hidden">Show Favorite Items</label>
+                    <button class="control-btn" id="showFavorites">
+                        <i class="fas fa-heart icon"></i> Show Favorites
+                    </button>
+                </div>
+            </div>
+        </section>
 
-    <div class="container">
-        <div id="imageContainer" class="image-container">
-            <div class="loading">
-                <div class="loading-spinner"></div>
-                <p>Loading amazing space images...</p>
+        <div class="container">
+            <div id="resultsArea" class="results-area">
+                <div id="imageContainer" class="image-container">
+
+                </div>
             </div>
         </div>
-    </div>
+    </main>
 
-    <div class="modal" id="modal">
+
+    <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalDescription" tabindex="-1">
         <div class="modal-content">
-            <span class="close-modal" id="closeModal">&times;</span>
-            <h2 id="modalTitle"></h2>
-            <img id="modalImage" src="" alt="NASA Image" style="width: 100%; height: auto;">
-            <p id="modalDescription"></p>
-            <div class="share-buttons">
-                <button class="share-btn twitter" id="shareTwitter">
-                    <i class="fab fa-twitter"></i> Share on Twitter
-                </button>
-                <button class="share-btn facebook" id="shareFacebook">
-                    <i class="fab fa-facebook-f"></i> Share on Facebook
-                </button>
+            <div class="modal-header">
+                 <h2 id="modalTitle" class="modal-title">Item Title</h2>
+                 <div class="modal-header-actions">
+                      <button class="modal-action-btn" id="fullscreenBtn" title="Toggle Fullscreen" aria-label="Toggle fullscreen view">
+                          <i class="fas fa-expand"></i>
+                      </button>
+                      <button class="close-modal" id="closeModal" aria-label="Close dialog">
+                           <i class="fas fa-times"></i>
+                      </button>
+                 </div>
+            </div>
+            <div class="modal-body">
+                 <div id="modalMediaContainer">
+                     <img id="modalImage" src="" alt="" style="display: none;">
+                     <div id="modalVideoEmbed" style="display: none;">
+
+                     </div>
+                     <a id="modalHdLink" href="#" target="_blank" rel="noopener noreferrer" style="display: none;">
+                         <i class="fas fa-external-link-alt icon"></i> View High-Resolution Image
+                     </a>
+                 </div>
+                 <p id="modalDescription">Item description.</p>
+            </div>
+             <div class="modal-footer">
+                <div class="share-buttons">
+                    <button class="share-btn twitter" id="shareTwitter" title="Share this on Twitter">
+                        <i class="fab fa-twitter icon"></i> Twitter
+                    </button>
+                    <button class="share-btn facebook" id="shareFacebook" title="Share this on Facebook">
+                        <i class="fab fa-facebook-f icon"></i> Facebook
+                    </button>
+
+                </div>
             </div>
         </div>
     </div>
 
-    <button id="scrollTopBtn" title="Go to top"><i class="fas fa-arrow-up"></i></button>
+    <button id="scrollTopBtn" title="Go to top" aria-label="Scroll to top">
+        <i class="fas fa-arrow-up"></i>
+    </button>
 
     <script>
-        // Constants
-        const API_KEY = 'MwIRbOp23bRhI47MR2lom8oBgtYf43DlnyChKURd';
-        const IMAGE_COUNT = 6;
-        const ANIMATION_DELAY = 100; // ms
-        const FADE_DURATION = 300; // ms
+        const CONFIG = {
+            API_KEY: 'DEMO_KEY',
+            BASE_URL: 'https://api.nasa.gov/planetary/apod',
+            RANDOM_COUNT: 6,
+            ANIMATION_DELAY: 70,
+            FADE_DURATION: 300,
+            LOCAL_STORAGE_KEY: 'nasaGalleryFavoritesV2',
+            DEBOUNCE_DELAY: 150,
+        };
 
-        // State management
         const state = {
             favorites: new Set(),
-            currentImages: [],
+            currentItems: [],
+            currentModalItem: null,
+            isLoading: false,
+            currentView: 'latest',
+            lastFocusedElement: null,
         };
 
-        // DOM Elements
         const elements = {
             imageContainer: document.getElementById('imageContainer'),
+            resultsArea: document.getElementById('resultsArea'),
             modal: document.getElementById('modal'),
             modalTitle: document.getElementById('modalTitle'),
+            modalMediaContainer: document.getElementById('modalMediaContainer'),
             modalImage: document.getElementById('modalImage'),
+            modalVideoEmbed: document.getElementById('modalVideoEmbed'),
+            modalHdLink: document.getElementById('modalHdLink'),
             modalDescription: document.getElementById('modalDescription'),
             scrollTopBtn: document.getElementById('scrollTopBtn'),
+            showFavoritesBtn: document.getElementById('showFavorites'),
+            showAllBtn: document.getElementById('showAll'),
+            closeModalBtn: document.getElementById('closeModal'),
+            shareTwitterBtn: document.getElementById('shareTwitter'),
+            shareFacebookBtn: document.getElementById('shareFacebook'),
+            fullscreenBtn: document.getElementById('fullscreenBtn'),
+            controlBtns: document.querySelectorAll('.control-btn'),
         };
 
-        // API Service
-        const nasaAPI = {
-            async getImages() {
-                try {
-                    const response = await fetch(
-                        `https://api.nasa.gov/planetary/apod?api_key=${API_KEY}&count=${IMAGE_COUNT}`
-                    );
-                    if (!response.ok) throw new Error('NASA API request failed');
-                    return await response.json();
-                } catch (error) {
-                    console.error('Error fetching NASA images:', error);
-                    throw error;
-                }
-            }
-        };
-
-        // UI Components
-        const UI = {
-            showLoading() {
-                elements.imageContainer.innerHTML = `
-                    <div class="loading">
-                        <div class="loading-spinner"></div>
-                        <p>Loading amazing space images...</p>
-                    </div>
-                `;
-            },
-
-            showError() {
-                elements.imageContainer.innerHTML = `
-                    <div class="error-message">
-                        <p>Error loading images. Please try again later.</p>
-                        <button onclick="imageGallery.loadImages()" class="control-btn">Retry</button>
-                    </div>
-                `;
-            },
-
-            createImageCard(item, index) {
-                const card = document.createElement('div');
-                card.className = 'image-card';
-                card.style.animationDelay = `${index * ANIMATION_DELAY}ms`;
-
-                const favoriteButton = this.createFavoriteButton(item.url);
-                
-                card.innerHTML = `
-                    <img src="${item.url}" alt="${item.title}" loading="lazy">
-                    <div class="card-content">
-                        <h3>${item.title}</h3>
-                        <p class="card-date">${item.date}</p>
-                        <p class="card-description">${item.explanation.substring(0, 100)}...</p>
-                    </div>
-                `;
-
-                card.prepend(favoriteButton);
-                return card;
-            },
-
-            createFavoriteButton(imageUrl) {
-                const button = document.createElement('button');
-                button.className = 'favorite-btn';
-                button.setAttribute('data-url', imageUrl);
-                button.innerHTML = `<i class="fas fa-heart${state.favorites.has(imageUrl) ? '' : '-o'}"></i>`;
-                button.onclick = (e) => {
-                    e.stopPropagation();
-                    imageGallery.toggleFavorite(imageUrl);
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
                 };
-                return button;
-            },
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        function getYouTubeId(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+
+        function getVimeoId(url) {
+             const regExp = /https?:\/\/(?:www\.|player\.)?vimeo.com\/(?:channels\/(?:\w+\/)?|groups\/([^/]*)\/videos\/|album\/(\d+)\/video\/|video\/|)(\d+)(?:$|\/|\?)/;
+             const match = url.match(regExp);
+             return match ? match[3] : null;
+        }
+
+
+        const apiService = {
+            buildUrl(params = {}) {
+                 const url = new URL(CONFIG.BASE_URL);
+                 url.searchParams.set('api_key', CONFIG.API_KEY);
+                 url.searchParams.set('thumbs', 'true');
+
+                 if (params.count) {
+                     url.searchParams.set('count', params.count);
+                 }
+                 return url.toString();
+             },
+
+             async fetchAPOD(params = {}) {
+                 state.isLoading = true;
+                 ui.setLoadingState(true, params.triggerButton);
+
+                 try {
+                    const url = this.buildUrl(params);
+                    const response = await fetch(url);
+
+                    if (!response.ok) {
+                        let errorMsg = `API Error: ${response.status} ${response.statusText}`;
+                        try {
+                             const errorData = await response.json();
+                             errorMsg = errorData.msg || errorMsg;
+                         } catch (e) { }
+                         throw new Error(errorMsg);
+                     }
+
+                     const data = await response.json();
+                     const results = Array.isArray(data) ? data : [data];
+                     state.currentItems = results;
+                     return results;
+
+                 } catch (error) {
+                     console.error('Error fetching NASA data:', error);
+                     ui.showError(error.message);
+                     state.currentItems = [];
+                     return [];
+                 } finally {
+                     state.isLoading = false;
+                      ui.setLoadingState(false, params.triggerButton);
+                 }
+             }
+        };
+
+        const ui = {
+             setLoadingState(isLoading, button = null) {
+                 if (button) {
+                     button.disabled = isLoading;
+                     const icon = button.querySelector('i');
+                     if (icon) {
+                         icon.className = isLoading ? 'fas fa-spinner spinner' : button.dataset.originalIcon;
+                     }
+                 }
+             },
+
+             showLoading(message = "Loading...") {
+                 elements.resultsArea.innerHTML = `
+                     <div class="loading-state">
+                         <div class="loading-spinner"></div>
+                         <p>${message}</p>
+                     </div>
+                 `;
+             },
+
+             showError(message = 'Could not load data. Please try again.') {
+                 const errorHtml = `
+                     <div class="error-state">
+                         <i class="fas fa-exclamation-triangle"></i>
+                         <p><strong>Oops! Something went wrong.</strong></p>
+                         <p>${message}</p>
+                         <button class="control-btn" onclick="galleryApp.loadLatestItems()"><i class="fas fa-redo icon"></i> Retry Latest</button>
+                     </div>
+                 `;
+                 elements.resultsArea.innerHTML = errorHtml;
+             },
+
+             showNoResults(type = 'latest') {
+                  let message = "No items found.";
+                  let icon = "fa-search";
+                  if (type === 'favorites') {
+                       message = "You haven't added any favorites yet. Click the <i class='fas fa-heart' style='color: var(--heart-color)'></i> to save items.";
+                       icon = "fa-heart-crack";
+                  }
+                  elements.resultsArea.innerHTML = `
+                     <div class="no-results-state">
+                         <i class="fas ${icon}"></i>
+                         <p>${message}</p>
+                     </div>
+                  `;
+             },
+
+             renderItems(items, viewType = 'latest') {
+                 elements.imageContainer.innerHTML = '';
+                 if (!items || items.length === 0) {
+                    this.showNoResults(viewType);
+                    return;
+                 }
+
+                 if (elements.resultsArea.firstElementChild !== elements.imageContainer) {
+                     elements.resultsArea.innerHTML = '';
+                     elements.resultsArea.appendChild(elements.imageContainer);
+                 }
+
+                 items.forEach((item, index) => {
+                     if (!item || !item.url) {
+                         console.warn("Skipping invalid item:", item);
+                         return;
+                     }
+                     const card = this.createItemCard(item, index);
+                     elements.imageContainer.appendChild(card);
+                 });
+             },
+
+             createItemCard(item, index) {
+                 const card = document.createElement('article');
+                 card.className = 'item-card';
+                 card.style.animationDelay = `${index * CONFIG.ANIMATION_DELAY}ms`;
+                 card.setAttribute('aria-labelledby', `card-title-${index}`);
+                 card.dataset.mediaType = item.media_type;
+
+                 const isFavorite = state.favorites.has(item.url);
+                 const imageUrl = item.media_type === 'image' ? item.url : item.thumbnail_url;
+
+                 card.innerHTML = `
+                     <a href="${item.url}" target="_blank" class="card-media-link" title="View Source (${item.media_type === 'video' ? 'Video Host' : 'NASA'})" data-media-type="${item.media_type}">
+                        ${imageUrl ? `<img src="${imageUrl}" alt="${item.title || 'NASA Media'}" class="${item.media_type === 'image' ? 'card-image' : 'card-video-thumb'}" loading="lazy" onerror="this.style.display='none'; this.parentElement.style.backgroundColor='#ccc';">` : '<div class="card-video-thumb" style="background-color:#ccc; display:flex; align-items:center; justify-content:center; color:#555;">No Thumbnail</div>'}
+                     </a>
+                     <div class="card-content">
+                         <h3 id="card-title-${index}">${item.title || 'Untitled'}</h3>
+                         ${item.date ? `<p class="card-date"><i class="fas fa-calendar-alt icon" aria-hidden="true"></i> ${item.date}</p>` : ''}
+                         <p class="card-description">${item.explanation ? item.explanation.substring(0, 120) + '...' : 'No description available.'}</p>
+                         <div class="card-actions">
+                             <button class="view-details-btn" data-url="${item.url}">
+                                 <i class="fas fa-info-circle icon"></i> View Details
+                             </button>
+                             <button class="favorite-btn ${isFavorite ? 'is-favorite' : ''}" data-url="${item.url}" aria-label="${isFavorite ? 'Remove from favorites' : 'Add to favorites'}" aria-pressed="${isFavorite}">
+                                 <i class="fas fa-heart fa-solid"></i>
+                                 <i class="far fa-heart fa-regular"></i>
+                             </button>
+                         </div>
+                     </div>
+                 `;
+
+                  card.querySelector('.view-details-btn').addEventListener('click', (e) => {
+                     e.preventDefault();
+                     galleryApp.openModal(item);
+                  });
+                  card.querySelector('.favorite-btn').addEventListener('click', (e) => {
+                     e.stopPropagation();
+                     galleryApp.toggleFavorite(item.url, e.currentTarget);
+                  });
+                  const mediaLink = card.querySelector('.card-media-link');
+                  if (item.media_type === 'video') {
+                      mediaLink.addEventListener('click', (e) => {
+                          e.preventDefault();
+                          galleryApp.openModal(item);
+                      });
+                  } else {
+                       mediaLink.href = item.hdurl || item.url;
+                       mediaLink.title = `View ${item.hdurl ? 'high-resolution' : 'source'} image (opens in new tab)`;
+                  }
+
+                 return card;
+             },
+
+             updateFavoriteButton(button, itemUrl) {
+                 const isFavorite = state.favorites.has(itemUrl);
+                 button.classList.toggle('is-favorite', isFavorite);
+                 button.setAttribute('aria-label', isFavorite ? 'Remove from favorites' : 'Add to favorites');
+                 button.setAttribute('aria-pressed', String(isFavorite));
+                 button.classList.add('pulse');
+                 setTimeout(() => button.classList.remove('pulse'), 500);
+             },
 
             updateModalContent(item) {
-                elements.modalTitle.textContent = item.title;
-                elements.modalImage.src = item.url;
-                elements.modalDescription.textContent = item.explanation;
-            }
+                 state.currentModalItem = item;
+                 elements.modalTitle.textContent = item.title || 'Untitled';
+                 elements.modalDescription.textContent = item.explanation || 'No description available.';
+
+                 elements.modalImage.style.display = 'none';
+                 elements.modalVideoEmbed.style.display = 'none';
+                 elements.modalVideoEmbed.innerHTML = '';
+                 elements.modalHdLink.style.display = 'none';
+
+                 if (item.media_type === 'image') {
+                    elements.modalImage.src = item.url;
+                    elements.modalImage.alt = item.title || 'NASA Image';
+                    elements.modalImage.style.display = 'block';
+                    if (item.hdurl && item.hdurl !== item.url) {
+                         elements.modalHdLink.href = item.hdurl;
+                         elements.modalHdLink.style.display = 'block';
+                    }
+                 } else if (item.media_type === 'video') {
+                     let embedHtml = '<p style="color: var(--muted-text-color); text-align: center;">Video type not supported for embedding.</p>';
+                     const youtubeId = getYouTubeId(item.url);
+                     const vimeoId = !youtubeId ? getVimeoId(item.url) : null;
+
+                     if (youtubeId) {
+                         embedHtml = `<iframe src="https://www.youtube.com/embed/${youtubeId}?autoplay=0&rel=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen title="${item.title || 'YouTube Video'}"></iframe>`;
+                     } else if (vimeoId) {
+                         embedHtml = `<iframe src="https://player.vimeo.com/video/${vimeoId}?autoplay=0" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="${item.title || 'Vimeo Video'}"></iframe>`;
+                     }
+
+                     elements.modalVideoEmbed.innerHTML = embedHtml;
+                     elements.modalVideoEmbed.style.display = 'block';
+                 }
+                 const fsIcon = elements.fullscreenBtn.querySelector('i');
+                 fsIcon.classList.remove('fa-compress');
+                 fsIcon.classList.add('fa-expand');
+                 elements.fullscreenBtn.title = "Enter Fullscreen";
+                 elements.fullscreenBtn.setAttribute('aria-label', "Enter fullscreen mode");
+            },
+
+            toggleScrollTopButton: debounce(() => {
+                if (document.body.scrollTop > 100 || document.documentElement.scrollTop > 100) {
+                    elements.scrollTopBtn.classList.add('visible');
+                } else {
+                    elements.scrollTopBtn.classList.remove('visible');
+                }
+            }, CONFIG.DEBOUNCE_DELAY)
         };
 
-        // Main Gallery Controller
-        const imageGallery = {
-            async loadImages() {
-                UI.showLoading();
-                try {
-                    state.currentImages = await nasaAPI.getImages();
-                    this.renderImages(state.currentImages);
-                } catch (error) {
-                    UI.showError();
-                }
+        const galleryApp = {
+            init() {
+                this.storeButtonIcons();
+                this.loadFavorites();
+                this.setupEventListeners();
+                this.loadLatestItems();
+                document.addEventListener('fullscreenchange', this.handleFullscreenChange.bind(this));
             },
 
-            renderImages(images) {
-                elements.imageContainer.innerHTML = '';
-                images.forEach((item, index) => {
-                    if (item.media_type === 'image') {
-                        const card = UI.createImageCard(item, index);
-                        card.addEventListener('click', () => this.openModal(item));
-                        elements.imageContainer.appendChild(card);
+            storeButtonIcons() {
+                 elements.controlBtns.forEach(btn => {
+                     const icon = btn.querySelector('i');
+                     if (icon) {
+                         btn.dataset.originalIcon = icon.className;
+                     }
+                 });
+             },
+
+             async loadLatestItems() {
+                 if (state.isLoading) return;
+                 state.currentView = 'latest';
+                 ui.showLoading("Loading latest images...");
+                 const items = await apiService.fetchAPOD({
+                     count: CONFIG.RANDOM_COUNT,
+                     triggerButton: elements.showAllBtn
+                 });
+                 ui.renderItems(items, 'latest');
+             },
+
+             loadFavorites() {
+                 try {
+                    const storedFavorites = localStorage.getItem(CONFIG.LOCAL_STORAGE_KEY);
+                    if (storedFavorites) {
+                        state.favorites = new Set(JSON.parse(storedFavorites));
                     }
-                });
+                 } catch (e) { console.error("Could not load favorites:", e); }
+             },
+
+             saveFavorites() {
+                 try {
+                    localStorage.setItem(CONFIG.LOCAL_STORAGE_KEY, JSON.stringify([...state.favorites]));
+                 } catch (e) { console.error("Could not save favorites:", e); }
+             },
+
+            toggleFavorite(itemUrl, buttonElement) {
+                 if (state.favorites.has(itemUrl)) {
+                     state.favorites.delete(itemUrl);
+                 } else {
+                     state.favorites.add(itemUrl);
+                 }
+                 this.saveFavorites();
+                 ui.updateFavoriteButton(buttonElement, itemUrl);
+
+                 if (state.currentView === 'favorites') {
+                     this.showFavorites();
+                 }
             },
 
-            toggleFavorite(imageUrl) {
-                const favoriteBtn = document.querySelector(`[data-url="${imageUrl}"]`);
-                
-                if (state.favorites.has(imageUrl)) {
-                    state.favorites.delete(imageUrl);
-                    favoriteBtn.innerHTML = '<i class="fas fa-heart-o"></i>';
-                } else {
-                    state.favorites.add(imageUrl);
-                    favoriteBtn.innerHTML = '<i class="fas fa-heart"></i>';
-                }
-
-                favoriteBtn.classList.add('pulse');
-                setTimeout(() => favoriteBtn.classList.remove('pulse'), 500);
-            },
-
-            showFavorites() {
-                const favoriteImages = state.currentImages.filter(item => 
-                    state.favorites.has(item.url)
-                );
-
-                if (favoriteImages.length === 0) {
-                    elements.imageContainer.innerHTML = `
-                        <div style="text-align: center; padding: 20px;">
-                            <p>No favorites yet. Add some by clicking the heart icon on images!</p>
-                            <i class="fas fa-heart" style="font-size: 48px; color: #ff4757; margin-top: 20px;"></i>
-                        </div>
-                    `;
-                    return;
-                }
-
-                this.renderImages(favoriteImages);
-            },
+             showFavorites() {
+                 state.currentView = 'favorites';
+                 const favoriteItems = state.currentItems.filter(item =>
+                     item && item.url && state.favorites.has(item.url)
+                 );
+                 ui.renderItems(favoriteItems, 'favorites');
+             },
 
             openModal(item) {
-                UI.updateModalContent(item);
-                elements.modal.style.display = 'block';
-                requestAnimationFrame(() => {
-                    elements.modal.style.opacity = '1';
-                });
+                 state.lastFocusedElement = document.activeElement;
+                 ui.updateModalContent(item);
+                 elements.modal.classList.add('is-open');
+                 elements.modal.removeAttribute('aria-hidden');
+
+                 setTimeout(() => {
+                     elements.modal.focus();
+                     const focusable = elements.modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+                     const firstFocusable = Array.from(focusable).find(el => el.offsetParent !== null);
+                     if (firstFocusable) firstFocusable.focus();
+                 }, 100);
+
+                 document.body.style.overflow = 'hidden';
             },
 
             closeModal() {
-                elements.modal.style.opacity = '0';
-                setTimeout(() => {
-                    elements.modal.style.display = 'none';
-                }, FADE_DURATION);
+                if (document.fullscreenElement === elements.modalMediaContainer) {
+                    document.exitFullscreen();
+                }
+                 elements.modal.classList.remove('is-open');
+                 elements.modal.setAttribute('aria-hidden', 'true');
+                 document.body.style.overflow = '';
+
+                 if (state.lastFocusedElement) {
+                     state.lastFocusedElement.focus();
+                     state.lastFocusedElement = null;
+                 }
+                 state.currentModalItem = null;
+                 elements.modalVideoEmbed.innerHTML = '';
+            },
+
+            handleModalKeydown(event) {
+                 if (event.key === 'Escape') { this.closeModal(); }
+                 if (event.key === 'Tab') { this.trapFocus(event); }
+            },
+
+            trapFocus(event) {
+                const focusable = Array.from(elements.modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'))
+                                      .filter(el => el.offsetParent !== null);
+                 if (focusable.length === 0) return;
+
+                 const firstElement = focusable[0];
+                 const lastElement = focusable[focusable.length - 1];
+
+                 if (event.shiftKey) {
+                     if (document.activeElement === firstElement) {
+                         lastElement.focus();
+                         event.preventDefault();
+                     }
+                 } else {
+                     if (document.activeElement === lastElement) {
+                         firstElement.focus();
+                         event.preventDefault();
+                     }
+                 }
+            },
+
+             toggleFullscreen() {
+                 const elem = elements.modalMediaContainer;
+                 if (!document.fullscreenElement) {
+                     if (elem.requestFullscreen) { elem.requestFullscreen(); }
+                     else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); }
+                     else if (elem.msRequestFullscreen) { elem.msRequestFullscreen(); }
+                 } else {
+                     if (document.exitFullscreen) { document.exitFullscreen(); }
+                     else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
+                     else if (document.msExitFullscreen) { document.msExitFullscreen(); }
+                 }
+             },
+
+             handleFullscreenChange() {
+                 const fsIcon = elements.fullscreenBtn.querySelector('i');
+                 if (document.fullscreenElement === elements.modalMediaContainer) {
+                     fsIcon.classList.remove('fa-expand');
+                     fsIcon.classList.add('fa-compress');
+                     elements.fullscreenBtn.title = "Exit Fullscreen";
+                      elements.fullscreenBtn.setAttribute('aria-label', "Exit fullscreen mode");
+                 } else {
+                     fsIcon.classList.remove('fa-compress');
+                     fsIcon.classList.add('fa-expand');
+                     elements.fullscreenBtn.title = "Enter Fullscreen";
+                     elements.fullscreenBtn.setAttribute('aria-label', "Enter fullscreen mode");
+                 }
+             },
+
+            share(platform) {
+                 if (!state.currentModalItem) return;
+                 const item = state.currentModalItem;
+                 const pageUrl = item.hdurl || item.url;
+                 const shareText = encodeURIComponent(`Check out this NASA APOD: ${item.title || ''}`);
+                 const shareUrlParam = encodeURIComponent(pageUrl);
+                 let url = '';
+
+                 switch (platform) {
+                    case 'twitter': url = `https://twitter.com/intent/tweet?text=${shareText}&url=${shareUrlParam}`; break;
+                    case 'facebook': url = `https://www.facebook.com/sharer/sharer.php?u=${shareUrlParam}"e=${shareText}`; break;
+                 }
+                 if (url) { window.open(url, '_blank', 'noopener,noreferrer,width=600,height=400'); }
+            },
+
+            setupEventListeners() {
+                elements.showFavoritesBtn.addEventListener('click', () => this.showFavorites());
+                elements.showAllBtn.addEventListener('click', () => this.loadLatestItems());
+
+                elements.closeModalBtn.addEventListener('click', () => this.closeModal());
+                elements.modal.addEventListener('click', (e) => { if (e.target === elements.modal) this.closeModal(); });
+                elements.modal.addEventListener('keydown', (e) => this.handleModalKeydown(e));
+
+                elements.fullscreenBtn.addEventListener('click', () => this.toggleFullscreen());
+
+                window.addEventListener('scroll', ui.toggleScrollTopButton, { passive: true });
+                elements.scrollTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+                elements.shareTwitterBtn.addEventListener('click', () => this.share('twitter'));
+                elements.shareFacebookBtn.addEventListener('click', () => this.share('facebook'));
             }
         };
 
-        // Event Listeners
-        function initializeEventListeners() {
-            document.getElementById('showFavorites').addEventListener('click', () => 
-                imageGallery.showFavorites()
-            );
-            
-            document.getElementById('showAll').addEventListener('click', () => 
-                imageGallery.loadImages()
-            );
-
-            document.getElementById('closeModal').addEventListener('click', () => 
-                imageGallery.closeModal()
-            );
-
-            window.addEventListener('scroll', () => {
-                elements.scrollTopBtn.style.display = 
-                    (document.documentElement.scrollTop > 20) ? 'block' : 'none';
-            });
-
-            elements.scrollTopBtn.addEventListener('click', () => {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            });
-
-            window.addEventListener('click', (event) => {
-                if (event.target === elements.modal) {
-                    imageGallery.closeModal();
-                }
-            });
-        }
-
-        // Initialize
         document.addEventListener('DOMContentLoaded', () => {
-            initializeEventListeners();
-            imageGallery.loadImages();
+            galleryApp.init();
         });
+
     </script>
 </body>
 </html>
